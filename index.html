@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Expiry Stock Scanner V5</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div><div class="eyebrow">EXPIRY STOCK SCANNER</div><h1>Expiry Tracker</h1></div>
+  <button class="icon-btn" id="addTop">＋</button>
+</header>
+
+<nav class="tabs" aria-label="เมนูหลัก">
+  <button class="tab active" data-page="scanPage">📷 สแกน</button>
+  <button class="tab" data-page="checkPage">📦 ตรวจสินค้า</button>
+  <button class="tab" data-page="alertPage">🔴 ใกล้หมดอายุ</button>
+  <button class="tab" data-page="dashPage">📊 Dashboard</button>
+</nav>
+
+<main>
+<section id="scanPage" class="page active">
+  <div class="hero">
+    <div><span class="eyebrow">BARCODE</span><h2>สแกนสินค้า</h2><p>สแกนบาร์โค้ดเพื่อค้นหาสินค้าที่บันทึกไว้ หรือสร้างรายการใหม่</p></div>
+    <div class="scanner-box">
+      <video id="camera" playsinline muted></video>
+      <div class="scan-frame"><i></i></div>
+      <div id="cameraMessage">กด “เปิดกล้อง” แล้วหันกล้องไปที่ Barcode</div>
+    </div>
+    <div class="scan-actions">
+      <button class="primary" id="startScan">เปิดกล้อง</button>
+      <button class="secondary" id="stopScan">ปิดกล้อง</button>
+    </div>
+    <div class="manual-scan">
+      <input id="barcodeInput" inputmode="numeric" autocomplete="off" placeholder="หรือกรอกรหัส Barcode เช่น 885...">
+      <button class="secondary" id="findBarcode">ค้นหา</button>
+    </div>
+    <div class="scan-result hidden" id="scanResult"></div>
+  </div>
+</section>
+
+<section id="checkPage" class="page">
+  <div class="section-head"><div><div class="eyebrow">RECORD</div><h2>ตรวจ / บันทึกสินค้า</h2></div><button class="primary small" id="newProduct">＋ ใหม่</button></div>
+  <div id="checkEmpty" class="empty"><strong>ยังไม่มีสินค้าที่กำลังตรวจ</strong><span>สแกน Barcode หรือกด “ใหม่” เพื่อบันทึกสินค้า</span></div>
+  <div id="checkCard"></div>
+</section>
+
+<section id="alertPage" class="page">
+  <div class="section-head"><div><div class="eyebrow">EXPIRY ALERTS</div><h2>ใกล้หมดอายุ</h2></div></div>
+  <div class="summary-grid">
+    <article class="summary-card danger"><span>≤ 1 เดือน</span><strong id="oneCount">0</strong></article>
+    <article class="summary-card warning"><span>≤ 2 เดือน</span><strong id="twoCount">0</strong></article>
+    <article class="summary-card warning"><span>≤ 3 เดือน</span><strong id="threeCount">0</strong></article>
+  </div>
+  <div class="controls one"><input id="alertSearch" type="search" placeholder="ค้นหาสินค้า..."></div>
+  <div id="alertList" class="product-list"></div>
+</section>
+
+<section id="dashPage" class="page">
+  <div class="section-head"><div><div class="eyebrow">OVERVIEW</div><h2>Dashboard</h2></div></div>
+  <div class="dashboard-grid">
+    <article class="dash-card"><span>สินค้าทั้งหมด</span><strong id="totalCount">0</strong></article>
+    <article class="dash-card"><span>หมดอายุแล้ว</span><strong id="expiredCount">0</strong></article>
+    <article class="dash-card"><span>มีรูปภาพ</span><strong id="photoCount">0</strong></article>
+  </div>
+  <h3 class="subhead">ตามพื้นที่</h3><div id="storeStats" class="stats-list"></div>
+  <h3 class="subhead">ตามหมวดหมู่</h3><div id="categoryStats" class="stats-list"></div>
+</section>
+</main>
+
+<button class="fab" id="addFab">＋ เพิ่มสินค้า</button>
+</div>
+
+<div class="modal hidden" id="modal">
+<div class="modal-backdrop" id="closeBackdrop"></div>
+<form class="sheet" id="productForm">
+  <div class="sheet-head"><div><div class="eyebrow">PRODUCT RECORD</div><h2 id="modalTitle">บันทึกสินค้า</h2></div><button type="button" class="close-btn" id="closeModal">×</button></div>
+  <input type="hidden" id="productId">
+  <label>Barcode<input id="barcode" inputmode="numeric" autocomplete="off" placeholder="สแกนหรือกรอกรหัสสินค้า"></label>
+  <label>ชื่อสินค้า<input id="name" required maxlength="80" placeholder="เช่น นม UHT"></label>
+  <label>รูปสินค้า
+    <div class="image-picker">
+      <div class="image-preview" id="imagePreview"><span>📦</span></div>
+      <div class="image-picker-actions">
+        <label class="upload-btn">ถ่าย/เลือกรูป<input id="image" type="file" accept="image/*" capture="environment"></label>
+        <button type="button" class="remove-image hidden" id="removeImage">ลบรูป</button>
+      </div>
+    </div>
+  </label>
+  <label>พื้นที่จัดเก็บ
+    <select id="store" required><option>พื้นที่ขาย</option><option>Store หลังร้าน</option><option>ตู้แช่ วอลล์</option></select>
+  </label>
+  <label>หมวดหมู่สินค้า
+    <select id="category" required>
+      <option>น้ำดื่มทั่วไป</option><option>เบียร์</option><option>กาแฟ</option><option>นม</option>
+      <option>ขนมหนม</option><option>ของใช้ในครัว</option><option>มาม่า ซอง/กระป๋อง</option><option>อาหารแช่แข็ง</option>
+    </select>
+  </label>
+  <div class="two-col">
+    <label>อายุสินค้า (วัน)<input id="shelfLife" type="number" min="0" step="1" placeholder="เช่น 365"></label>
+    <label>จำนวน<input id="quantity" type="number" min="0" step="1" value="1"></label>
+  </div>
+  <label>วันที่เริ่มนับ / วันที่รับสินค้า<input id="startDate" type="date"></label>
+  <label>วันหมดอายุ<input id="expiry" type="date" required></label>
+  <button type="button" class="calc-btn" id="calcExpiry">คำนวณวันหมดอายุจากอายุสินค้า</button>
+  <label>หมายเหตุ<textarea id="note" rows="3" maxlength="200" placeholder="รายละเอียดเพิ่มเติม"></textarea></label>
+  <div class="form-actions"><button type="button" class="secondary danger-btn hidden" id="deleteBtn">ลบสินค้า</button><button class="primary" type="submit">บันทึกสินค้า</button></div>
+</form>
+</div>
+<div class="toast" id="toast"></div>
+<script src="https://unpkg.com/@zxing/browser@latest"></script>
+<script src="app.js"></script>
+</body>
+</html>
